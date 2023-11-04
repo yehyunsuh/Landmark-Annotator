@@ -5,101 +5,105 @@ from datetime import datetime
 
 clicked_points = []
 clone = None
+colors = ()
 
 
-def MouseLeftClick(event, x, y, flags, param):
-    red = (0, 0, 255)
+def MouseLeftClick(event, x, y, _, __):
+    """
+    Activated at every left click and draws the added annotation on the image
+    :param event: cv2 event
+    :param x: x coordinate of the left click
+    :param y: y coordinate of the left click
+    """
     if event == cv2.EVENT_LBUTTONDOWN:
         clicked_points.append((y, x))
         image = clone.copy()
         for point in clicked_points:
-            cv2.circle(
-                image, (point[1], point[0]), 5, red, thickness=-1)
+            cv2.circle(image, (point[1], point[0]), 5, colors[2], thickness=-1)
         cv2.imshow("image", image)
 
 
 def annotator(args):
     """
     This function saves txt files based on the annotations done in each image
-
+    :param args: arguments from argparser
     """
-    global clone, clicked_points
+    global clone, clicked_points, colors
     image_names = sorted(os.listdir(args.path))
     now = datetime.now()
-    now_date = (
-        now.year - 2000, now.month, now.day, now.hour, now.minute, now.second
-    )
+    now_date = (now.year - 2000, now.month, now.day, now.hour, now.minute, now.second)
     now_str = "%s%02d%02d_%02d%02d%02d" % now_date
     txt_name = f'{args.name}/{now_str}_{args.path.split("/")[-1]}.txt'
+    colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255))  # BGR
 
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
     cv2.setMouseCallback("image", MouseLeftClick)
-
     count = 0
     while True:
         try:
             image_name = image_names[count]
-            blue = (0, 0, 255)
-            image_path = f'{args.path}/{image_name}'
-            image = cv2.imread(image_path)
-            clone = image.copy()
-            same = False
+            image_path = f"{args.path}/{image_name}"
+            original_image = cv2.imread(image_path)
+            clone = original_image.copy()
+            same_image = False
 
             print(image_name)
             while True:
+                image = cv2.imread(image_path)
+                for point in clicked_points:
+                    cv2.circle(image, (point[1], point[0]), 5, colors[2], thickness=-1)
                 cv2.imshow("image", image)
                 key = cv2.waitKey(0)
 
-                if key == ord('n'):
+                # when you press b - erase the most recent anntation
+                if key == ord("b"):
+                    if len(clicked_points) > 0:
+                        clicked_points.pop()
+
+                # when you press n - moves to the next image after saving the annotation
+                if key == ord("n"):
                     count += 1
-                    if clicked_points == []:
-                        break
+                    # if there has been clicks
+                    if clicked_points != []:
+                        # check if there was a same image that has been annotated before
+                        # needs this to re-annotate previous images
+                        if os.path.exists(txt_name):
+                            file_read = open(txt_name, "r")
+                            lines = file_read.readlines()
+                            for line in lines:
+                                if image_name == line.split(",")[0]:
+                                    same_image = True
+                                    previous_annotation = line
+                            file_read.close()
 
-                    # TODO: erase if existed
-                    if os.path.exists(txt_name):
-                        file_read = open(txt_name, 'r')
-                        lines = file_read.readlines()
-                        for line in lines:
-                            if image_name == line.split(',')[0]:
-                                same = True
-                                old = line
-                        file_read.close()
+                        # change the format of changed points
+                        text_output = image_name
+                        text_output += "," + str(len(clicked_points))
+                        for points in clicked_points:
+                            text_output += f",{str(points[0])},{str(points[1])}"
+                        text_output += "\n"
 
-                    text_output = image_name
-                    text_output += "," + str(len(clicked_points))
-                    for points in clicked_points:
-                        text_output += f',{str(points[0])},{str(points[1])}'
-                    text_output += '\n'
+                        # when there was a same image that has been annotated - replace previous
+                        if same_image:
+                            file_write = open(txt_name, "w")
+                            print(f"{previous_annotation} has been changed to \n{text_output}")
+                            for line in lines:
+                                file_write.write(line.replace(previous_annotation, text_output))
+                            file_write.close()
 
-                    if same:
-                        file_write = open(txt_name, 'w')
-                        print(f'{old} has been changed to \n{text_output}')
-                        for line in lines:
-                            file_write.write(line.replace(old, text_output))
-                        file_write.close()
-                    else:
-                        file_write = open(txt_name, 'a+')
-                        file_write.write(text_output)
-                        file_write.close()
+                        # when it is first time being annotated - add to the current txt file
+                        else:
+                            file_write = open(txt_name, "a+")
+                            file_write.write(text_output)
+                            file_write.close()
                     clicked_points = []
                     break
 
-                if key == ord('b'):
-                    if len(clicked_points) > 0:
-                        clicked_points.pop()
-                        image = clone.copy()
-                        for i in range(len(clicked_points)):
-                            point = (
-                                clicked_points[i][1], clicked_points[i][0])
-                            cv2.circle(image, point, 5, blue, -1)
-                        cv2.imshow("image", image)
-
-                if key == ord('p'):
+                if key == ord("p"):
                     count -= 1
                     clicked_points = []
                     break
-
-                if key == ord('q'):
+                if key == ord("q"):
                     cv2.destroyAllWindows()
                     exit()
 
@@ -112,8 +116,8 @@ def annotator(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", default='png', help="Image directory path")
-    parser.add_argument("--name", default='Yehyun')
+    parser.add_argument("--path", default="png", help="Image directory path")
+    parser.add_argument("--name", default="Yehyun")
     args = parser.parse_args()
 
     # create directory where txt file will be saved
