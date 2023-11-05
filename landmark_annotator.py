@@ -2,6 +2,7 @@ import os
 import cv2
 import argparse
 from datetime import datetime
+import angle as angle
 
 clicked_points = []
 clone = None
@@ -60,6 +61,11 @@ def annotator(args):
                     if len(clicked_points) > 0:
                         clicked_points.pop()
 
+                if key == ord("a"):
+                    angles = angle.calculation(clicked_points)
+                    image = angle.visualization(args, image, image_name, clicked_points, angles, colors)
+                    cv2.imshow("image", image)                    
+
                 # when you press n - moves to the next image after saving the annotation
                 if key == ord("n"):
                     count += 1
@@ -96,6 +102,13 @@ def annotator(args):
                             file_write = open(txt_name, "a+")
                             file_write.write(text_output)
                             file_write.close()
+
+                    # after saving the coordinates, calculate the cup position
+                    # order - hip_l, hip_r, cup_u, cup_l, cup_e
+                    angles = angle.calculation(clicked_points)
+                    image = angle.visualization(args, image, image_name, clicked_points, angles, colors)
+                    # cv2.imshow("image", image)
+
                     clicked_points = []
                     break
 
