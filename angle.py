@@ -83,7 +83,6 @@ def draw_text(draw, text_pixel, text, rgb, font):
 
 
 def visualization(args, image, image_name, clicked_points, angles, colors):
-    print("visualization")
     line_width, circle_size = 3, 5
     degree_sign = u'\N{DEGREE SIGN}'
 
