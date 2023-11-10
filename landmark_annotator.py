@@ -1,7 +1,9 @@
 import os
+import re
 import cv2
 import argparse
 from datetime import datetime
+from glob import glob
 
 clicked_points = []
 clone = None
@@ -29,7 +31,12 @@ def annotator(args):
     :param args: arguments from argparser
     """
     global clone, clicked_points, colors
-    image_names = sorted(os.listdir(args.path))
+    image_path_list = sorted(glob(f'{args.path}/*.png'))
+    image_path_list_sorted = sorted(
+        image_path_list,
+        key=lambda s: int(re.findall(r'\d+', s)[-1])
+    )
+
     now = datetime.now()
     now_date = (now.year - 2000, now.month, now.day, now.hour, now.minute, now.second)
     now_str = "%s%02d%02d_%02d%02d%02d" % now_date
@@ -39,14 +46,25 @@ def annotator(args):
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
     cv2.setMouseCallback("image", MouseLeftClick)
     count = 0
-    while True:
-        try:
-            image_name = image_names[count]
-            image_path = f"{args.path}/{image_name}"
-            original_image = cv2.imread(image_path)
-            clone = original_image.copy()
-            same_image = False
+    while count != len(image_path_list_sorted):
+        annotated = False
+        image_path = image_path_list_sorted[count]
+        image_name = image_path.split('/')[-1]
+        original_image = cv2.imread(image_path)
+        clone = original_image.copy()
+        same_image = False
 
+        if os.path.exists('checkpoint.txt'):
+            file_read = open("checkpoint.txt", "r")
+            lines = file_read.readlines()
+            for line in lines:
+                if image_name == line.strip():
+                    annotated = True
+                    count += 1
+                    break
+                file_read.close()
+
+        if not annotated:
             print(image_name)
             while True:
                 image = cv2.imread(image_path)
@@ -62,6 +80,10 @@ def annotator(args):
 
                 # when you press n - moves to the next image after saving the annotation
                 if key == ord("n"):
+                    file_write_txt = image_name + "\n"
+                    file_write = open("checkpoint.txt", "a+")
+                    file_write.write(file_write_txt)
+                    file_write.close()
                     count += 1
                     # if there has been clicks
                     if clicked_points != []:
@@ -106,10 +128,8 @@ def annotator(args):
                 if key == ord("q"):
                     cv2.destroyAllWindows()
                     exit()
-
-        except Exception as e:
-            print(e)
-            break
+        else:
+            print(f'{image_name} has been already annotated')
 
     cv2.destroyAllWindows()
 
