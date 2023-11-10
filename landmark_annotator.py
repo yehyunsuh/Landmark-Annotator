@@ -32,11 +32,6 @@ def annotator(args):
     """
     global clone, clicked_points, colors
     image_path_list = sorted(glob(f'{args.path}/*.png'))
-    image_path_list_sorted = sorted(
-        image_path_list,
-        key=lambda s: int(re.findall(r'\d+', s)[-1])
-    )
-
     now = datetime.now()
     now_date = (now.year - 2000, now.month, now.day, now.hour, now.minute, now.second)
     now_str = "%s%02d%02d_%02d%02d%02d" % now_date
@@ -46,9 +41,9 @@ def annotator(args):
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
     cv2.setMouseCallback("image", MouseLeftClick)
     count = 0
-    while count != len(image_path_list_sorted):
+    while count != len(image_path_list):
         annotated = False
-        image_path = image_path_list_sorted[count]
+        image_path = image_path_list[count]
         image_name = image_path.split('/')[-1]
         original_image = cv2.imread(image_path)
         clone = original_image.copy()
