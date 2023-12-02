@@ -49,8 +49,8 @@ def annotator(args):
         clone = original_image.copy()
         same_image = False
 
-        if os.path.exists('checkpoint.txt'):
-            file_read = open("checkpoint.txt", "r")
+        if os.path.exists(f'checkpoint/{args.path}.txt'):
+            file_read = open(f"checkpoint/{args.path}.txt", "r")
             lines = file_read.readlines()
             for line in lines:
                 if image_name == line.strip():
@@ -76,7 +76,7 @@ def annotator(args):
                 # when you press n - moves to the next image after saving the annotation
                 if key == ord("n"):
                     file_write_txt = image_name + "\n"
-                    file_write = open("checkpoint.txt", "a+")
+                    file_write = open(f"checkpoint/{args.path}.txt", "a+")
                     file_write.write(file_write_txt)
                     file_write.close()
                     count += 1
@@ -137,5 +137,6 @@ if __name__ == "__main__":
 
     # create directory where txt file will be saved
     os.makedirs(args.name, exist_ok=True)
+    os.makedirs('checkpoint', exist_ok=True)
 
     annotator(args)
