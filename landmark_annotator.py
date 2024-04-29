@@ -1,5 +1,4 @@
 import os
-import re
 import cv2
 import argparse
 from datetime import datetime
@@ -20,6 +19,8 @@ def MouseLeftClick(event, x, y, _, __):
     if event == cv2.EVENT_LBUTTONDOWN:
         clicked_points.append((y, x))
         image = clone.copy()
+        cv2.line(image, (0, 100), (100, 100), color=(0,165,255), thickness=5)
+        cv2.line(image, (100, 0), (100, 100), color=(0,165,255), thickness=5)
         for point in clicked_points:
             cv2.circle(image, (point[1], point[0]), 5, colors[2], thickness=-1)
         cv2.imshow("image", image)
@@ -63,6 +64,13 @@ def annotator(args):
             print(image_name)
             while True:
                 image = cv2.imread(image_path)
+
+                # draw 2 lines in the upper left corner 
+                # This box will indicate the area where annotators will click 
+                # if the landmark does not exist
+                cv2.line(image, (0, 100), (100, 100), color=(0,165,255), thickness=5)
+                cv2.line(image, (100, 0), (100, 100), color=(0,165,255), thickness=5)
+
                 for point in clicked_points:
                     cv2.circle(image, (point[1], point[0]), 5, colors[2], thickness=-1)
                 cv2.imshow("image", image)
@@ -80,6 +88,7 @@ def annotator(args):
                     file_write.write(file_write_txt)
                     file_write.close()
                     count += 1
+
                     # if there has been clicks
                     if clicked_points != []:
                         # check if there was a same image that has been annotated before
@@ -117,15 +126,52 @@ def annotator(args):
                     break
 
                 if key == ord("p"):
+                    with open(f"checkpoint/{args.path}.txt", "r") as file_read:
+                        lines = file_read.readlines()
+
+                    with open(f"checkpoint/{args.path}.txt", "w") as file_write:
+                        for i in range(len(lines) - 1):
+                            file_write.write(lines[i])
+
                     count -= 1
                     clicked_points = []
                     break
+
                 if key == ord("q"):
+                    # before exiting, see through the annotations and erase the duplicates
+                    print("\n===== Looking throught the annotations... =====")
+                    with open(txt_name, "r") as file_read:
+                        lines = file_read.readlines()
+
+                    with open(txt_name, "w") as file_write:
+                        # remove duplicates by iterating through the whole list after my index using for loop
+                        for i in range(len(lines)-1, 1, -1):
+                            for j in range(i-1, 0, -1):
+                                if lines[i].strip().split(".png")[0] == lines[j].strip().split(".png")[0]:
+                                    lines[j] = ""
+
+                        for line in lines:
+                            file_write.write(line)
+
                     cv2.destroyAllWindows()
                     exit()
         else:
             print(f'{image_name} has been already annotated')
 
+    # before exiting, see through the annotations and erase the duplicates
+    print("\n===== Looking throught the annotations... =====")
+    with open(txt_name, "r") as file_read:
+        lines = file_read.readlines()
+
+    with open(txt_name, "w") as file_write:
+        # remove duplicates by iterating through the whole list after my index using for loop
+        for i in range(len(lines)-1, 1, -1):
+            for j in range(i-1, 0, -1):
+                if lines[i].strip().split(".png")[0] == lines[j].strip().split(".png")[0]:
+                    lines[j] = ""
+
+        for line in lines:
+            file_write.write(line)
     cv2.destroyAllWindows()
 
 
