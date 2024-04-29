@@ -32,7 +32,10 @@ def annotator(args):
     :param args: arguments from argparser
     """
     global clone, clicked_points, colors
-    image_path_list = sorted(glob(f'{args.path}/*.png'))
+
+    if os.path.exists("png/.DS_Store"):
+        os.remove("png/.DS_Store")
+    image_path_list = sorted(glob(f'{args.path}/*'))
     now = datetime.now()
     now_date = (now.year - 2000, now.month, now.day, now.hour, now.minute, now.second)
     now_str = "%s%02d%02d_%02d%02d%02d" % now_date
