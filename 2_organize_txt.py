@@ -31,11 +31,11 @@ def get_unique_directory(txt_files):
 
 
 def organize_txt(args):
-    txt_files = glob(f"{args.txt_path}/*.txt")
+    txt_files = glob(f"{args.text_directory}/*.txt")
 
     unique_directory_list = get_unique_directory(txt_files)
     for unique_directory in tqdm(unique_directory_list):
-        txt_files = sorted(glob(f"{args.txt_path}/*{unique_directory}*.txt"))
+        txt_files = sorted(glob(f"{args.text_directory}/*{unique_directory}*.txt"))
         
         annotation_list = []
         for txt_file in txt_files:
@@ -51,7 +51,7 @@ def organize_txt(args):
                     if annotation_list[i].strip().split(".png")[0] == annotation_list[j].strip().split(".png")[0]:
                         annotation_list[j] = ""
         
-        with open(f"{args.txt_path}/{unique_directory}.txt", "w") as file_write:
+        with open(f"{args.text_directory}/{unique_directory}.txt", "w") as file_write:
             for annotation in annotation_list:
                 file_write.write(annotation)
 
@@ -59,7 +59,7 @@ def organize_txt(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
-    parser.add_argument("--txt_path", default="txt", help="Image directory path")
+    parser.add_argument("--text_directory", default="text", help="Image directory path")
 
     args = parser.parse_args()
     

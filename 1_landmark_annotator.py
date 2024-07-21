@@ -35,11 +35,11 @@ def annotator(args):
 
     if os.path.exists("png/.DS_Store"):
         os.remove("png/.DS_Store")
-    image_path_list = sorted(glob(f'{args.path}/*'))
+    image_path_list = sorted(glob(f'{args.image_directory}/*'))
     now = datetime.now()
     now_date = (now.year - 2000, now.month, now.day, now.hour, now.minute, now.second)
     now_str = "%s%02d%02d_%02d%02d%02d" % now_date
-    txt_name = f'{args.name}/{now_str}_{args.path.split("/")[-1]}.txt'
+    txt_name = f'{args.text_directory}/{now_str}_{args.image_directory.split("/")[-1]}.txt'
     colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255))  # BGR
 
     cv2.namedWindow("image", cv2.WINDOW_NORMAL)
@@ -53,8 +53,8 @@ def annotator(args):
         clone = original_image.copy()
         same_image = False
 
-        if os.path.exists(f'checkpoint/{args.path}.txt'):
-            file_read = open(f"checkpoint/{args.path}.txt", "r")
+        if os.path.exists(f'checkpoint/{args.image_directory}.txt'):
+            file_read = open(f"checkpoint/{args.image_directory}.txt", "r")
             lines = file_read.readlines()
             for line in lines:
                 if image_name == line.strip():
@@ -87,7 +87,7 @@ def annotator(args):
                 # when you press n - moves to the next image after saving the annotation
                 if key == ord("n"):
                     file_write_txt = image_name + "\n"
-                    file_write = open(f"checkpoint/{args.path}.txt", "a+")
+                    file_write = open(f"checkpoint/{args.image_directory}.txt", "a+")
                     file_write.write(file_write_txt)
                     file_write.close()
                     count += 1
@@ -129,10 +129,10 @@ def annotator(args):
                     break
 
                 if key == ord("p"):
-                    with open(f"checkpoint/{args.path}.txt", "r") as file_read:
+                    with open(f"checkpoint/{args.image_directory}.txt", "r") as file_read:
                         lines = file_read.readlines()
 
-                    with open(f"checkpoint/{args.path}.txt", "w") as file_write:
+                    with open(f"checkpoint/{args.image_directory}.txt", "w") as file_write:
                         for i in range(len(lines) - 1):
                             file_write.write(lines[i])
 
@@ -180,12 +180,12 @@ def annotator(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", default="png", help="Image directory path")
-    parser.add_argument("--name", default="txt")
+    parser.add_argument("--image_directory", default="image", help="Image directory path")
+    parser.add_argument("--text_directory", default="text")
     args = parser.parse_args()
 
     # create directory where txt file will be saved
-    os.makedirs(args.name, exist_ok=True)
+    os.makedirs(args.text_directory, exist_ok=True)
     os.makedirs('checkpoint', exist_ok=True)
 
     annotator(args)
