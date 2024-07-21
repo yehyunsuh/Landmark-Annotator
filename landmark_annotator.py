@@ -181,7 +181,7 @@ def annotator(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", default="png", help="Image directory path")
-    parser.add_argument("--name", default="Yehyun")
+    parser.add_argument("--name", default="txt")
     args = parser.parse_args()
 
     # create directory where txt file will be saved
